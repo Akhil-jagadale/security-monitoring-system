@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Linux Security Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 30px;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            text-align: center;
+            font-size: 2.5em;
+        }
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            align-items: center;
+        }
+        select, button {
+            padding: 12px 20px;
+            font-size: 16px;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        select { flex: 1; background: white; }
+        button {
+            background: #667eea;
+            color: white;
+            font-weight: bold;
+        }
+        button:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        .card {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .card h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+        .info-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        .info-item strong {
+            color: #667eea;
+            display: block;
+            margin-bottom: 5px;
+        }
+        .check-item {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 4px solid #ddd;
+        }
+        .check-item.pass { border-left-color: #28a745; }
+        .check-item.fail { border-left-color: #dc3545; }
+        .status {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+        .pass .status {
+            background: #28a745;
+            color: white;
+        }
+        .fail .status {
+            background: #dc3545;
+            color: white;
+        }
+        .evidence {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            color: #666;
+        }
+        .score {
+            text-align: center;
+            font-size: 2em;
+            color: #667eea;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        .package-list {
+            max-height: 400px;
+            overflow-y: auto;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        .package-item {
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+        }
+        .package-item:last-child { border-bottom: none; }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #667eea;
+            font-size: 1.2em;
+        }
+        .error {
+            background: #dc3545;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🔒 Linux Security Dashboard</h1>
+    <div class="controls">
+        <select id="hostSelect">
+            <option value="">Loading hosts...</option>
+        </select>
+        <button onclick="loadHostData()">📊 Load Dashboard</button>
+    </div>
+    <div id="output"></div>
+</div>
+<script>
+    const API_BASE = "https://grg7og4c2d.execute-api.us-east-1.amazonaws.com/prod";
+
+    async function loadHosts() {
+        try {
+            const res = await fetch(API_BASE + "/hosts");
+            const hosts = await res.json();
+            const dropdown = document.getElementById("hostSelect");
+            dropdown.innerHTML = "";
+            if (hosts.length === 0) {
+                dropdown.innerHTML = '<option value="">No hosts found</option>';
+                return;
+            }
+            hosts.forEach(h => {
+                const option = document.createElement("option");
+                option.value = h;
+                option.textContent = h;
+                dropdown.appendChild(option);
+            });
+        } catch (error) {
+            document.getElementById("output").innerHTML =
+                '<div class="error">❌ Error loading hosts: ' + error.message + '</div>';
+        }
+    }
+
+    async function loadHostData() {
+        const host = document.getElementById("hostSelect").value;
+        if (!host) {
+            alert("Please select a host");
+            return;
+        }
+        document.getElementById("output").innerHTML = '<div class="loading">⏳ Loading data...</div>';
+        try {
+            const res = await fetch(API_BASE + "/latest?hostname=" + encodeURIComponent(host));
+            if (!res.ok) throw new Error("Failed to fetch data");
+            const data = await res.json();
+
+            let html = `<div class="card">
+            <h3>🖥️ Host Information</h3>
+            <div class="info-grid">
+                <div class="info-item">
+                    <strong>Hostname</strong>
+                    ${data.host.hostname}
+                </div>
+                <div class="info-item">
+                    <strong>Operating System</strong>
+                    ${data.host.os}
+                </div>
+                <div class="info-item">
+                    <strong>Kernel Version</strong>
+                    ${data.host.kernel}
+                </div>
+                <div class="info-item">
+                    <strong>IP Address</strong>
+                    ${data.host.ip_address}
+                </div>
+                <div class="info-item">
+                    <strong>Last Scan</strong>
+                    ${new Date(data.timestamp).toLocaleString()}
+                </div>
+            </div>
+        </div>`;
+
+            const passCount = data.cis_results.filter(c => c.status === "PASS").length;
+            const totalCount = data.cis_results.length;
+            const percentage = Math.round((passCount / totalCount) * 100);
+
+            html += `<div class="card">
+            <h3>🔒 CIS Security Checks</h3>
+            <div class="score">
+                ${percentage}% Compliant (${passCount}/${totalCount} checks passed)
+            </div>`;
+
+            data.cis_results.forEach(check => {
+                const statusClass = check.status === "PASS" ? "pass" : "fail";
+                html += `<div class="check-item ${statusClass}">
+                <div>
+                    <span class="status">${check.status}</span>
+                    <strong style="margin-left: 10px;">${check.check_name}</strong>
+                    <div style="color: #888; font-size: 0.9em; margin-top: 5px;">
+                        ${check.check_id}
+                    </div>
+                </div>
+                <div class="evidence">${check.evidence}</div>
+            </div>`;
+            });
+
+            html += `</div>`;
+
+            html += `<div class="card">
+            <h3>📦 Installed Packages (${data.packages.length} shown)</h3>
+            <div class="package-list">`;
+
+            data.packages.forEach(pkg => {
+                html += `<div class="package-item">
+                <strong>${pkg.name}</strong> - <span style="color: #666;">${pkg.version}</span>
+            </div>`;
+            });
+
+            html += `</div></div>`;
+
+            document.getElementById("output").innerHTML = html;
+
+        } catch (error) {
+            document.getElementById("output").innerHTML =
+                '<div class="error">❌ Error loading data: ' + error.message + '</div>';
+        }
+    }
+
+    loadHosts();
+</script>
+</body>
+</html>
