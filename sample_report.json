@@ -1,0 +1,33 @@
+{
+  "host": {
+    "hostname": "ip-172-31-10-25",
+    "os": "Ubuntu 22.04.4 LTS",
+    "kernel": "5.15.0-1051-aws",
+    "ip_address": "172.31.10.25"
+  },
+  "timestamp": "2026-02-12T15:30:00Z",
+  "packages": [
+    {
+      "name": "curl",
+      "version": "7.81.0-1ubuntu1.15"
+    },
+    {
+      "name": "vim",
+      "version": "2:8.2.3995-1ubuntu2.17"
+    }
+  ],
+  "cis_results": [
+    {
+      "check_id": "CIS-SSH-ROOT",
+      "check_name": "Root login disabled over SSH",
+      "status": "PASS",
+      "evidence": "PermitRootLogin no"
+    },
+    {
+      "check_id": "CIS-FW-UFW",
+      "check_name": "Firewall enabled",
+      "status": "FAIL",
+      "evidence": "Status: inactive"
+    }
+  ]
+}
