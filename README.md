@@ -83,20 +83,20 @@ The system collects installed packages and performs **CIS Benchmark (Ubuntu 22.0
 │ PK: hostname               │
 │ SK: timestamp              │
 └─────────────┬─────────────┘
-              ▲
+              ▼
               │ Query latest / scan hosts
 ┌─────────────┴─────────────┐
 │       Lambda Query API     │
 │ - GET /hosts               │
 │ - GET /latest?hostname=X   │
 └─────────────┬─────────────┘
-              ▲
+              ▼
               │ HTTPS GET requests
 ┌─────────────┴─────────────┐
 │        API Gateway         │
 │   GET /hosts, GET /latest  │
 └─────────────┬─────────────┘
-              ▲
+              ▼
               │ Fetch JSON
 ┌─────────────┴─────────────┐
 │   Web Dashboard (HTML)  │
