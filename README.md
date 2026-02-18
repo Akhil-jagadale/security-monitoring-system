@@ -99,7 +99,7 @@ The system collects installed packages and performs **CIS Benchmark (Ubuntu 22.0
               ▲
               │ Fetch JSON
 ┌─────────────┴─────────────┐
-│   Web Dashboard (HTML/JS)  │
+│   Web Dashboard (HTML)  │
 │ - Host dropdown            │
 │ - CIS compliance score     │
 │ - Packages + evidence      │
